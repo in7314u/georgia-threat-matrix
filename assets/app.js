@@ -177,7 +177,7 @@
       '<a href="#/actors"><b>' + D.actors.length + "</b><span>" + esc(t("threat actors")) + "</span></a>" +
       '<a href="#/timeline"><b>' + timeline.length + "</b><span>" + esc(t("dated events")) + "</span></a>" +
       '<a href="#/sources"><b>' + D.reports.length + "</b><span>" + esc(t("sources")) + "</span></a>" +
-      '<a href="#/timeline"><b>' + firstYear + "–" + lastYear + "</b><span>" + esc(t("years covered")) + "</span></a></div>" +
+      '<a href="#/timeline"><b>' + firstYear + "-" + lastYear + "</b><span>" + esc(t("years covered")) + "</span></a></div>" +
       "</div></section>" +
 
       '<section class="band"><div class="wrap section-head"><div><h2>' + esc(t("Threat actors")) + "</h2>" +

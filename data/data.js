@@ -1,5 +1,5 @@
 /*
-  Georgian Threat Matrix — site content.
+  Georgian Threat Matrix - site content.
   Everything the site shows comes from this file. To add content, append to
   the arrays below and commit; no build step is needed.
 
@@ -102,7 +102,7 @@ window.GTM = {
       sponsor: "",
       aliases: ["Win32/Georbot"],
       note: "Georbot is the name of the malware and botnet; no vendor group name exists. ESET did not attribute it to any state. The link to Russian security agencies is the Georgian government's own assessment.",
-      summary: "An information-stealing botnet found in 2011–2012 on computers in Georgian ministries, parliament, banks and NGOs, spread through compromised Georgian news sites.",
+      summary: "An information-stealing botnet found in 2011-2012 on computers in Georgian ministries, parliament, banks and NGOs, spread through compromised Georgian news sites.",
       sectors: { gov: "documented", parl: "documented", priv: "documented" }
     },
     {
@@ -174,7 +174,7 @@ window.GTM = {
         { label: "CNA report (PDF)", url: "https://www.cna.org/reports/2021/06/The-Role-of-Russia%27s-Military-in-Information-Confrontation.pdf", archived: true }
       ],
       findings: [
-        "Between 2004 and 2013, APT28—a hacker outfit attributed to the GRU’s Unit 26165—used fake NATO correspondence and imitated pro-Chechen websites to exploit networks to gain intelligence on adversaries. The IP address used to host the “stopgeorgia” website during Russia’s war with Georgia in 2008 belonged to a small company, Steadyhost, that was essentially collocated with a large GRU complex on Khoroshevskoe Highway in Moscow"
+        "Between 2004 and 2013, APT28-a hacker outfit attributed to the GRU’s Unit 26165-used fake NATO correspondence and imitated pro-Chechen websites to exploit networks to gain intelligence on adversaries. The IP address used to host the “stopgeorgia” website during Russia’s war with Georgia in 2008 belonged to a small company, Steadyhost, that was essentially collocated with a large GRU complex on Khoroshevskoe Highway in Moscow"
       ]
     },
     {
@@ -290,7 +290,7 @@ window.GTM = {
     {
       id: "crs-selected-cyberattacks",
       actors: ["sandworm"],
-      title: "Cybersecurity: Selected Cyberattacks, 2012–2024",
+      title: "Cybersecurity: Selected Cyberattacks, 2012-2024",
       publisher: "Congressional Research Service",
       year: 2024,
       links: [
@@ -374,7 +374,7 @@ window.GTM = {
       findings: ["Researchers saw denial-of-service traffic aimed at Georgian government websites as early as 20 July 2008, weeks before the war began."] },
     { id: "us-ccu-2008", actors: [], paraphrased: true, title: "Georgian Cyberattacks Traced to Russian Civilians (coverage of the US Cyber Consequences Unit report)", publisher: "MIT Technology Review", year: 2009,
       links: [{ label: "MIT Technology Review", url: "https://www.technologyreview.com/2009/08/18/210438/georgian-cyberattacks-traced-to-russian-civilians/" },
-        { label: "CCDCOE cyber law toolkit: Georgia–Russia conflict (2008)", url: "https://cyberlaw.ccdcoe.org/wiki/Georgia-Russia_conflict_(2008)" }],
+        { label: "CCDCOE cyber law toolkit: Georgia-Russia conflict (2008)", url: "https://cyberlaw.ccdcoe.org/wiki/Georgia-Russia_conflict_(2008)" }],
       findings: ["The US Cyber Consequences Unit analysed attacks that ran from 7 to 16 August 2008 and concluded they were carried out by civilians and criminal groups, with signs of advance coordination with the Russian military.",
         "Only a nine-page summary of the roughly 100-page report was made public."] },
     { id: "eset-georbot", actors: ["georbot"], paraphrased: true, title: "From Georgia With Love: Win32/Georbot information stealing trojan and botnet", publisher: "ESET", year: 2012,
@@ -385,7 +385,7 @@ window.GTM = {
     { id: "cert-georgia-georbot", actors: ["georbot"], paraphrased: true, title: "Georgia: Russia responsible for Georbot cyber-spy attack (coverage of the CERT-Georgia report)", publisher: "Infosecurity Magazine", year: 2012,
       links: [{ label: "Infosecurity Magazine", url: "https://www.infosecurity-magazine.com/news/georgia-russia-responsible-for-georbot-cyber-spy/" }],
       findings: ["CERT-Georgia reported the malware in ministries, parliament, banks and NGOs, with roughly 300 to 400 infected computers sending documents to servers run by the operator.",
-        "Infection came through compromised Georgian news sites, on pages covering NATO and US–Georgian topics.",
+        "Infection came through compromised Georgian news sites, on pages covering NATO and US-Georgian topics.",
         "CERT-Georgia turned the operator's own malware on him, captured his webcam image, and said it had established a link to Russian security agencies."] },
     { id: "kaspersky-miniduke", actors: ["apt29"], paraphrased: true, title: "The MiniDuke Mystery: PDF 0-day Government Spy Assembler 0x29A Micro Backdoor", publisher: "Kaspersky / CrySyS Lab", year: 2013,
       links: [{ label: "Securelist article", url: "https://securelist.com/the-miniduke-mystery-pdf-0-day-government-spy-assembler-0x29a-micro-backdoor/31112/" }],
@@ -429,7 +429,7 @@ window.GTM = {
       links: [{ label: "Archived fact sheet", url: "https://web.archive.org/web/20250117194331/https://www.whitehouse.gov/briefing-room/statements-releases/2021/04/15/fact-sheet-imposing-costs-for-harmful-foreign-activities-by-the-russian-government/" }] },
     { id: "apt29-uk-us-expose", actors: ["apt29"], general: true, title: "Russia: UK and US expose global campaign of malign activity by Russian intelligence services", publisher: "UK Government", year: 2021, findings: [],
       links: [{ label: "GOV.UK news", url: "https://www.gov.uk/government/news/russia-uk-and-us-expose-global-campaigns-of-malign-activity-by-russian-intelligence-services" }] },
-    { id: "apt29-grizzly-steppe", actors: ["apt29"], general: true, title: "GRIZZLY STEPPE – Russian Malicious Cyber Activity", publisher: "DHS / FBI", year: 2016, findings: [],
+    { id: "apt29-grizzly-steppe", actors: ["apt29"], general: true, title: "GRIZZLY STEPPE - Russian Malicious Cyber Activity", publisher: "DHS / FBI", year: 2016, findings: [],
       links: [{ label: "Joint Analysis Report (PDF)", url: "https://www.cisa.gov/sites/default/files/publications/JAR_16-20296A_GRIZZLY%20STEPPE-2016-1229.pdf", archived: true }] },
     { id: "apt29-crowdstrike-dnc", actors: ["apt29"], general: true, title: "CrowdStrike’s work with the Democratic National Committee: Setting the record straight", publisher: "CrowdStrike", year: null, findings: [],
       links: [{ label: "CrowdStrike blog", url: "https://www.crowdstrike.com/en-us/blog/bears-midst-intrusion-democratic-national-committee/" }] },
@@ -464,10 +464,10 @@ window.GTM = {
     { sort: "2008-07-20", when: "20 July 2008", actors: [], report: "nyt-before-the-gunfire",
       title: "First denial-of-service traffic",
       text: "Researchers observe floods aimed at Georgian government websites weeks before the war." },
-    { sort: "2008-08-07", when: "7–16 August 2008", actors: [], report: "us-ccu-2008",
+    { sort: "2008-08-07", when: "7-16 August 2008", actors: [], report: "us-ccu-2008",
       title: "Wartime attack campaign",
       text: "The US Cyber Consequences Unit later concluded civilians and criminal groups carried out the attacks with signs of coordination with the Russian military." },
-    { sort: "2011-06", when: "2011–2012", actors: ["georbot"], report: "cert-georgia-georbot",
+    { sort: "2011-06", when: "2011-2012", actors: ["georbot"], report: "cert-georgia-georbot",
       title: "Georbot botnet inside state institutions",
       text: "Roughly 300 to 400 computers in ministries, parliament, banks and NGOs are found sending documents to an outside operator." },
     { sort: "2013-02", when: "February 2013", actors: ["apt29"], report: "kaspersky-miniduke",
@@ -485,7 +485,7 @@ window.GTM = {
     { sort: "2020-09-01", when: "1 September 2020", actors: [], report: "lugar-lab-2020",
       title: "Health ministry and Lugar Center breached",
       text: "Georgia's interior ministry blames a foreign intelligence service; stolen records later appear online mixed with forgeries." },
-    { sort: "2023-10", when: "October–December 2023", actors: ["winter-vivern"], report: "rf-tag-70",
+    { sort: "2023-10", when: "October-December 2023", actors: ["winter-vivern"], report: "rf-tag-70",
       title: "Roundcube webmail espionage campaign",
       text: "More than 80 organisations are targeted, mainly in Georgia, Poland and Ukraine, including the Georgian Ministry of Defence mail server." },
     { sort: "2024-06", when: "From mid-2024", actors: ["curly-comrades"], report: "bitdefender-curly-comrades",
@@ -524,7 +524,7 @@ window.GTM = {
     { sort: "2018-01", when: "January 2018", actors: ["sandworm"], report: "doj-gru-indictment",
       title: "Spearphishing of a Georgian media outlet",
       text: "Eight spearphishing emails with a malware-laced attachment were sent to 68 addresses at a Georgian media entity, from an account imitating its name." },
-    { sort: "2019-07-31", when: "31 July – 1 August 2019", actors: ["sandworm"], report: "doj-gru-indictment",
+    { sort: "2019-07-31", when: "31 July - 1 August 2019", actors: ["sandworm"], report: "doj-gru-indictment",
       title: "Reconnaissance of the Parliament of Georgia",
       text: "Technical reconnaissance of Parliament’s official domain and an attempt to gain unauthorized access to its network." },
     { sort: "2019-10-28", when: "28 October 2019", actors: ["sandworm"], report: "doj-gru-indictment",

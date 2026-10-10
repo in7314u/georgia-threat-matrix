@@ -39,6 +39,40 @@
     return '<a href="https://attack.mitre.org/groups/' + a.mitre + '/" target="_blank" rel="noopener noreferrer">MITRE ATT&amp;CK ' + a.mitre + "</a>";
   }
 
+  /* ---------- actor emblems ---------- */
+
+  // Line drawings on a 64x64 grid, one per actor, each with a single red mark.
+  // An actor without an entry here gets its initials instead.
+  var RED = '<circle cx="{x}" cy="{y}" r="3" fill="var(--red)" stroke="none"/>';
+  function red(x, y) { return RED.replace("{x}", x).replace("{y}", y); }
+  var EMBLEMS = {
+    // The Dukes: a crown
+    "apt29": '<path d="M12 44 16 22 26 34 32 18 38 34 48 22 52 44Z"/><path d="M14 51H50"/>' + red(32, 12),
+    // Pawn Storm: a chess pawn
+    "apt28": '<circle cx="32" cy="19" r="7"/><path d="M24 31H40M27 31C27 39 24 43 21 48H43C40 43 37 39 37 31M17 54H47"/>' + red(32, 19),
+    // Sandworm: a worm moving through dunes
+    "sandworm": '<path d="M8 38C14 26 20 26 26 38S38 50 44 38 50 26 54 28"/><path d="M8 52H56" stroke-dasharray="1 6"/>' + red(55, 28),
+    // MuddyWater: a drop over water
+    "muddywater": '<path d="M32 9C24 21 18 27 18 35A14 14 0 0 0 46 35C46 27 40 21 32 9Z"/><path d="M11 55q5-4 10 0t10 0 10 0 10 0"/>' + red(32, 36),
+    // Saint Bear: a bear's head under a halo
+    "uac-0056": '<ellipse cx="32" cy="12" rx="12" ry="4"/><circle cx="32" cy="39" r="14"/><circle cx="20" cy="27" r="5"/><circle cx="44" cy="27" r="5"/>' + red(32, 42),
+    // Lorec53: the lure document
+    "lorec53": '<path d="M19 9H38L47 18V55H19Z"/><path d="M38 9V18H47M26 29H40M26 36H40M26 43H33"/>' + red(40, 46),
+    // Georbot: a bot
+    "georbot": '<rect x="15" y="23" width="34" height="27" rx="6"/><path d="M32 23V14M25 42H39"/><circle cx="25" cy="34" r="3"/><circle cx="39" cy="34" r="3"/>' + red(32, 11),
+    // Winter Vivern: a snowflake
+    "winter-vivern": '<path d="M32 9V55M12 20.5 52 43.5M12 43.5 52 20.5M27 14 32 19 37 14M27 50 32 45 37 50"/>' + red(32, 32),
+    // Curly COMrades: curly braces
+    "curly-comrades": '<path d="M26 11C20 11 20 15 20 21 20 27 18 32 13 32 18 32 20 37 20 43 20 49 20 53 26 53M38 11C44 11 44 15 44 21 44 27 46 32 51 32 46 32 44 37 44 43 44 49 44 53 38 53"/>' + red(32, 32)
+  };
+  function portrait(a, large) {
+    var art = EMBLEMS[a.id]
+      ? '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + EMBLEMS[a.id] + "</svg>"
+      : '<span class="portrait-initials" aria-hidden="true">' + esc(a.name.replace(/[^A-Za-z0-9]/g, "").slice(0, 2).toUpperCase()) + "</span>";
+    return '<div class="portrait' + (large ? " lg" : "") + '">' + art +
+      (large ? '<span class="portrait-id">' + (a.mitre ? esc(a.mitre) : "No MITRE ID") + "</span>" : "") + "</div>";
+  }
+
   /* ---------- shared fragments ---------- */
 
   function reportHtml(r, q, open) {
@@ -74,8 +108,9 @@
     var ev = eventsFor(a.id);
     var desc = a.mitreDesc || a.summary;
     return '<a class="card ' + (cls || "") + '" href="#/actor/' + a.id + '">' +
-      '<div class="card-top"><h3>' + esc(a.name) + '</h3><span class="pill quiet">' + esc(a.origin) + "</span></div>" +
-      '<p class="label">' + (a.mitre ? "MITRE ATT&amp;CK " + a.mitre : "Not in MITRE ATT&amp;CK") + "</p>" +
+      '<div class="card-top">' + portrait(a) + "<div><h3>" + esc(a.name) + '</h3><p class="label">' +
+      (a.mitre ? "MITRE ATT&amp;CK " + a.mitre : "Not in MITRE ATT&amp;CK") + '</p></div></div>' +
+      '<div><span class="pill quiet">' + esc(a.origin) + "</span></div>" +
       "<p>" + esc(desc) + "</p>" +
       '<div class="meta label"><span>' + plural(reportsFor(a.id).length, "source") + "</span>" +
       (ev.length ? "<span>First seen " + ev[0].sort.slice(0, 4) + "</span>" : "") + '<span class="go">View profile →</span></div></a>';
@@ -161,7 +196,9 @@
       : '<div class="callout"><p class="label">About this group</p><p>This group has no MITRE ATT&amp;CK entry. What is known comes from the reports below.</p></div>';
     app.innerHTML = '<div class="wrap page">' +
       '<p class="crumb"><a href="#/actors">← All threat actors</a></p>' +
-      '<div class="page-head"><h1>' + esc(a.name) + "</h1>" + mitre +
+      '<div class="page-head"><div class="profile">' + portrait(a, true) + "<div><h1>" + esc(a.name) + '</h1><div class="pills">' +
+      '<span class="pill">' + esc(a.origin) + "</span>" + (a.sponsor ? '<span class="pill quiet">' + esc(a.sponsor) + "</span>" : "") +
+      "</div></div></div>" + mitre +
       '<div class="callout red"><p class="label">In Georgia</p><p>' + esc(a.summary) + "</p></div>" +
       '<dl class="facts">' + facts + "</dl></div>" +
       '<section class="section" style="margin-top:0"><h2>Activity against Georgia</h2>' + timelineHtml(eventsFor(id)) + "</section>" +

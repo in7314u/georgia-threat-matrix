@@ -52,7 +52,7 @@
         '<ul class="findings">' + r.findings.map(function (f) { return "<li>" + highlight(f, q) + "</li>"; }).join("") + "</ul></details>";
     }
     return '<article class="report" id="r-' + r.id + '">' +
-      "<h3>" + highlight(r.title, q) + "</h3>" +
+      '<h3><a href="' + esc(r.links[0].url) + '" target="_blank" rel="noopener noreferrer">' + highlight(r.title, q) + "</a></h3>" +
       '<div class="report-meta"><span class="label">' + highlight(r.publisher, q) + (r.year ? " · " + r.year : "") + "</span>" + actorPills(r.actors) +
       (r.general ? '<span class="pill quiet">background</span>' : "") +
       (r.paraphrased ? '<span class="pill quiet" title="Findings are summaries written for this site, not quotations">summary</span>' : "") + "</div>" +
@@ -63,7 +63,7 @@
     if (!events.length) return '<p class="empty">No dated events recorded for this selection.</p>';
     return '<ol class="timeline">' + events.map(function (e) {
       var r = reportById[e.report];
-      return "<li><time>" + esc(e.when) + "</time><div><h3>" + esc(e.title) + "</h3><p>" + esc(e.text) + "</p>" +
+      return "<li><time>" + esc(e.when) + '</time><div><h3><a href="#/sources/' + r.id + '">' + esc(e.title) + "</a></h3><p>" + esc(e.text) + "</p>" +
         '<div class="row">' + actorPills(e.actors) +
         '<a class="src" href="#/sources/' + r.id + '">Source: ' + esc(r.publisher) + "</a></div></div></li>";
     }).join("") + "</ol>";
@@ -113,10 +113,10 @@
       '<div class="globe-wrap"><canvas id="globe" aria-label="Globe centred on Georgia, which is marked in red" role="img"></canvas>' +
       '<div class="globe-pin" id="globe-pin"><i></i>Georgia</div></div>' +
       '<div class="stats">' +
-      "<div><b>" + D.actors.length + "</b><span>threat actors</span></div>" +
-      "<div><b>" + timeline.length + "</b><span>dated events</span></div>" +
-      "<div><b>" + D.reports.length + "</b><span>sources</span></div>" +
-      "<div><b>" + firstYear + "–" + lastYear + "</b><span>years covered</span></div></div>" +
+      '<a href="#/actors"><b>' + D.actors.length + "</b><span>threat actors</span></a>" +
+      '<a href="#/timeline"><b>' + timeline.length + "</b><span>dated events</span></a>" +
+      '<a href="#/sources"><b>' + D.reports.length + "</b><span>sources</span></a>" +
+      '<a href="#/timeline"><b>' + firstYear + "–" + lastYear + "</b><span>years covered</span></a></div>" +
       "</div></section>" +
 
       '<section class="band"><div class="wrap section-head"><div><h2>Threat actors</h2>' +
@@ -235,7 +235,7 @@
     draw();
     if (focusId) {
       var el = document.getElementById("r-" + focusId);
-      if (el) el.scrollIntoView({ block: "start" });
+      if (el) { el.classList.add("focus"); el.scrollIntoView({ block: "start" }); }
     }
   }
 
@@ -311,7 +311,7 @@
       if (!reduced && !dragging) spin -= dt * 9;   // degrees per second: one full turn every 40 s
       var centre = (HOME + spin + offset) * RAD;
       var nod = reduced ? 0 : 10 * Math.sin(t / 4.3);
-      tilt = Math.max(-85, Math.min(85, TILT + nod + tiltOffset)) * RAD;
+      tilt = (TILT + nod + tiltOffset) * RAD;
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, size, size);
@@ -365,7 +365,7 @@
     canvas.addEventListener("pointermove", function (e) {
       if (!dragging) return;
       offset -= (e.clientX - lastX) * 0.35; lastX = e.clientX;
-      tiltOffset = Math.max(-100, Math.min(60, tiltOffset + (e.clientY - lastY) * 0.3)); lastY = e.clientY;
+      tiltOffset += (e.clientY - lastY) * 0.35; lastY = e.clientY;
     });
     function release() { dragging = false; }
     canvas.addEventListener("pointerup", release);

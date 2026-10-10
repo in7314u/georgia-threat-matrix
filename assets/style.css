@@ -14,7 +14,7 @@
   --globe-dot: #9f85f5;
   --mark: rgba(167, 139, 250, 0.3);
   --sans: "IBM Plex Sans", "Noto Sans Georgian", system-ui, "Segoe UI", sans-serif;
-  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  --mono: "IBM Plex Mono", "Noto Sans Georgian", ui-monospace, Consolas, monospace;
 }
 
 * { box-sizing: border-box; }
@@ -45,11 +45,16 @@ mark { background: var(--mark); color: inherit; }
 .top-in { pointer-events: auto; max-width: 1120px; margin-inline: auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 10px 8px 20px; border: 1px solid var(--line); border-radius: 999px; background: rgba(23, 16, 41, 0.82); backdrop-filter: blur(12px); }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 600; white-space: nowrap; }
 .brand:hover { color: inherit; }
-nav { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; }
+nav { display: flex; gap: 2px; margin-left: auto; min-width: 0; overflow-x: auto; scrollbar-width: none; }
 nav::-webkit-scrollbar { display: none; }
 nav a { padding: 7px 14px; border-radius: 999px; text-decoration: none; font-size: 0.92rem; white-space: nowrap; color: var(--soft); }
 nav a:hover { color: var(--text); background: var(--panel-2); }
 nav a[aria-current="page"] { background: var(--purple-strong); color: #fff; }
+.lang { flex: none; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; background: transparent; color: var(--text); font: 500 0.82rem var(--sans); cursor: pointer; }
+.lang:hover { border-color: var(--purple); color: var(--purple); }
+/* Georgian has no capital letters in running text: drop the uppercase styling of labels. */
+html[lang="ka"] .label, html[lang="ka"] .globe-pin, html[lang="ka"] .timeline time { text-transform: none; letter-spacing: 0.02em; font-size: 0.8rem; }
+.quote-note { margin-top: 12px; }
 
 /* Hero */
 .hero { overflow-x: clip; background:

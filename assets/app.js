@@ -3,6 +3,7 @@
 
   var D = window.GTM;
   var G = window.GTM_GLOBE;
+  var KA = window.GTM_KA || { ui: {}, sectors: {}, actors: {}, timeline: {}, reports: {} };
   var app = document.getElementById("app");
   var actorById = {};
   var reportById = {};
@@ -11,6 +12,29 @@
   var timeline = D.timeline.slice().sort(function (a, b) { return a.sort < b.sort ? -1 : 1; });
   var firstYear = +timeline[0].sort.slice(0, 4);
   var lastYear = +timeline[timeline.length - 1].sort.slice(0, 4);
+
+  /* ---------- language ---------- */
+
+  var lang = "en";
+  try { if (localStorage.getItem("gtm-lang") === "ka") lang = "ka"; } catch (e) { /* storage unavailable */ }
+
+  // Interface text: the English string is the key.
+  function t(s, vars) {
+    var out = (lang === "ka" && KA.ui[s] != null) ? KA.ui[s] : s;
+    if (vars) Object.keys(vars).forEach(function (k) { out = out.replace("{" + k + "}", vars[k]); });
+    return out;
+  }
+  // Content from data.js, with a Georgian override where one exists.
+  function loc(kind, id, field, fallback) {
+    var o = lang === "ka" && KA[kind] && KA[kind][id];
+    return (o && o[field] != null) ? o[field] : fallback;
+  }
+  function count(n, word) {
+    return lang === "ka" ? n + " " + t(word) : n + " " + word + (n === 1 ? "" : "s");
+  }
+  function ev(e, field) { return loc("timeline", e.sort, field, e[field]); }
+  function findingsOf(r) { return loc("reports", r.id, "findings", r.findings); }
+  function isTranslated(r) { return lang === "ka" && KA.reports[r.id]; }
 
   function esc(s) {
     return String(s).replace(/[&<>"']/g, function (c) {
@@ -23,7 +47,6 @@
     var re = new RegExp("(" + esc(q).replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")", "gi");
     return safe.replace(re, "<mark>$1</mark>");
   }
-  function plural(n, word) { return n + " " + word + (n === 1 ? "" : "s"); }
   function reportsFor(id) {
     return D.reports.filter(function (r) { return r.actors.indexOf(id) !== -1; });
   }
@@ -43,8 +66,7 @@
 
   // Line drawings on a 64x64 grid, one per actor, each with a single red mark.
   // An actor without an entry here gets its initials instead.
-  var RED = '<circle cx="{x}" cy="{y}" r="3" fill="var(--red)" stroke="none"/>';
-  function red(x, y) { return RED.replace("{x}", x).replace("{y}", y); }
+  function red(x, y) { return '<circle cx="' + x + '" cy="' + y + '" r="3" fill="var(--red)" stroke="none"/>'; }
   var EMBLEMS = {
     // The Dukes: a crown
     "apt29": '<path d="M12 44 16 22 26 34 32 18 38 34 48 22 52 44Z"/><path d="M14 51H50"/>' + red(32, 12),
@@ -70,7 +92,7 @@
       ? '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + EMBLEMS[a.id] + "</svg>"
       : '<span class="portrait-initials" aria-hidden="true">' + esc(a.name.replace(/[^A-Za-z0-9]/g, "").slice(0, 2).toUpperCase()) + "</span>";
     return '<div class="portrait' + (large ? " lg" : "") + '">' + art +
-      (large ? '<span class="portrait-id">' + (a.mitre ? esc(a.mitre) : "No MITRE ID") + "</span>" : "") + "</div>";
+      (large ? '<span class="portrait-id">' + (a.mitre ? esc(a.mitre) : esc(t("No MITRE ID"))) + "</span>" : "") + "</div>";
   }
 
   /* ---------- shared fragments ---------- */
@@ -78,50 +100,55 @@
   function reportHtml(r, q, open) {
     var links = r.links.map(function (l) {
       return '<li><a href="' + esc(l.url) + '" target="_blank" rel="noopener noreferrer">' + esc(l.label) + "</a>" +
-        (l.archived ? ' <span class="pill quiet" title="A copy of this document is kept in the repository">archived</span>' : "") + "</li>";
+        (l.archived ? ' <span class="pill quiet" title="' + esc(t("A copy of this document is kept in the repository")) + '">' + esc(t("archived")) + "</span>" : "") + "</li>";
     }).join("");
+    var list = findingsOf(r);
     var findings = "";
-    if (r.findings.length) {
-      findings = "<details" + (open ? " open" : "") + "><summary>" + plural(r.findings.length, "finding") + " on Georgia</summary>" +
-        '<ul class="findings">' + r.findings.map(function (f) { return "<li>" + highlight(f, q) + "</li>"; }).join("") + "</ul></details>";
+    if (list.length) {
+      findings = "<details" + (open ? " open" : "") + "><summary>" + count(list.length, "finding") + " " + esc(t("on Georgia")) + "</summary>" +
+        (lang === "ka" && !isTranslated(r) ? '<p class="label quote-note">' + esc(t("Quotations are shown in the original language.")) + "</p>" : "") +
+        '<ul class="findings">' + list.map(function (f) { return "<li>" + highlight(f, q) + "</li>"; }).join("") + "</ul></details>";
     }
     return '<article class="report" id="r-' + r.id + '">' +
       '<h3><a href="' + esc(r.links[0].url) + '" target="_blank" rel="noopener noreferrer">' + highlight(r.title, q) + "</a></h3>" +
       '<div class="report-meta"><span class="label">' + highlight(r.publisher, q) + (r.year ? " · " + r.year : "") + "</span>" + actorPills(r.actors) +
-      (r.general ? '<span class="pill quiet">background</span>' : "") +
-      (r.paraphrased ? '<span class="pill quiet" title="Findings are summaries written for this site, not quotations">summary</span>' : "") + "</div>" +
+      (r.general ? '<span class="pill quiet">' + esc(t("background")) + "</span>" : "") +
+      (r.paraphrased ? '<span class="pill quiet" title="' + esc(t("Findings are summaries written for this site, not quotations")) + '">' + esc(t("summary")) + "</span>" : "") + "</div>" +
       '<ul class="links">' + links + "</ul>" + findings + "</article>";
   }
 
   function timelineHtml(events) {
-    if (!events.length) return '<p class="empty">No dated events recorded for this selection.</p>';
+    if (!events.length) return '<p class="empty">' + esc(t("No dated events recorded for this selection.")) + "</p>";
     return '<ol class="timeline">' + events.map(function (e) {
       var r = reportById[e.report];
-      return "<li><time>" + esc(e.when) + '</time><div><h3><a href="#/sources/' + r.id + '">' + esc(e.title) + "</a></h3><p>" + esc(e.text) + "</p>" +
+      return "<li><time>" + esc(ev(e, "when")) + '</time><div><h3><a href="#/sources/' + r.id + '">' + esc(ev(e, "title")) + "</a></h3><p>" + esc(ev(e, "text")) + "</p>" +
         '<div class="row">' + actorPills(e.actors) +
-        '<a class="src" href="#/sources/' + r.id + '">Source: ' + esc(r.publisher) + "</a></div></div></li>";
+        '<a class="src" href="#/sources/' + r.id + '">' + esc(t("Source:")) + " " + esc(r.publisher) + "</a></div></div></li>";
     }).join("") + "</ol>";
   }
 
-  // One card per actor: name, origin, MITRE description, and where to read more.
+  // One card per actor: emblem, name, origin, MITRE description, and where to read more.
   function actorCard(a, cls) {
-    var ev = eventsFor(a.id);
-    var desc = a.mitreDesc || a.summary;
+    var events = eventsFor(a.id);
+    var desc = loc("actors", a.id, "mitreDesc", a.mitreDesc) || loc("actors", a.id, "summary", a.summary);
     return '<a class="card ' + (cls || "") + '" href="#/actor/' + a.id + '">' +
       '<div class="card-top">' + portrait(a) + "<div><h3>" + esc(a.name) + '</h3><p class="label">' +
-      (a.mitre ? "MITRE ATT&amp;CK " + a.mitre : "Not in MITRE ATT&amp;CK") + '</p></div></div>' +
-      '<div><span class="pill quiet">' + esc(a.origin) + "</span></div>" +
+      (a.mitre ? "MITRE ATT&amp;CK " + a.mitre : esc(t("Not in MITRE ATT&CK"))) + "</p></div></div>" +
+      '<div><span class="pill quiet">' + esc(t(a.origin)) + "</span></div>" +
       "<p>" + esc(desc) + "</p>" +
-      '<div class="meta label"><span>' + plural(reportsFor(a.id).length, "source") + "</span>" +
-      (ev.length ? "<span>First seen " + ev[0].sort.slice(0, 4) + "</span>" : "") + '<span class="go">View profile →</span></div></a>';
+      '<div class="meta label"><span>' + count(reportsFor(a.id).length, "source") + "</span>" +
+      (events.length ? "<span>" + esc(t("First seen")) + " " + events[0].sort.slice(0, 4) + "</span>" : "") +
+      '<span class="go">' + esc(t("View profile →")) + "</span></div></a>";
   }
 
   function matrixHtml() {
-    var head = D.sectors.map(function (s) { return '<th scope="col">' + esc(s.name) + "</th>"; }).join("");
+    var head = D.sectors.map(function (s) {
+      return '<th scope="col">' + esc(lang === "ka" && KA.sectors[s.id] || s.name) + "</th>";
+    }).join("");
     var rows = D.actors.map(function (a) {
       var cells;
       if (a.sectorNote) {
-        cells = '<td class="note" colspan="' + D.sectors.length + '">' + esc(a.sectorNote) + "</td>";
+        cells = '<td class="note" colspan="' + D.sectors.length + '">' + esc(loc("actors", a.id, "sectorNote", a.sectorNote)) + "</td>";
       } else {
         cells = D.sectors.map(function (s) {
           var level = a.sectors[s.id];
@@ -133,8 +160,8 @@
     }).join("");
     return '<div class="scroll-x"><table class="matrix"><thead><tr><th scope="col"><span class="skip">Actor</span></th>' + head +
       "</tr></thead><tbody>" + rows + "</tbody></table></div>" +
-      '<div class="legend label"><span><i class="sq"></i> Targeting documented in a source</span>' +
-      '<span><i class="sq suggested"></i> Suggested by lure or decoy content</span></div>';
+      '<div class="legend label"><span><i class="sq"></i> ' + esc(t("Targeting documented in a source")) + "</span>" +
+      '<span><i class="sq suggested"></i> ' + esc(t("Suggested by lure or decoy content")) + "</span></div>";
   }
 
   /* ---------- views ---------- */
@@ -142,41 +169,40 @@
   function viewHome() {
     app.innerHTML =
       '<section class="hero"><div class="wrap hero-in">' +
-      "<h1>Cyber threats against Georgia, in one place</h1>" +
-      '<p class="lede">Georgian Threat Matrix collects public reports on the state-backed hacking groups that have targeted Georgia. ' +
-      "For each group you can see who they are, what they did here and when, with a link to every source.</p>" +
-      '<div class="globe-wrap"><canvas id="globe" aria-label="Globe centred on Georgia, which is marked in red" role="img"></canvas>' +
-      '<div class="globe-pin" id="globe-pin"><i></i>Georgia</div></div>' +
+      "<h1>" + esc(t("Cyber threats against Georgia, in one place")) + "</h1>" +
+      '<p class="lede">' + esc(t("Georgian Threat Matrix collects public reports on the state-backed hacking groups that have targeted Georgia. For each group you can see who they are, what they did here and when, with a link to every source.")) + "</p>" +
+      '<div class="globe-wrap"><canvas id="globe" aria-label="Globe with Georgia marked in red" role="img"></canvas>' +
+      '<div class="globe-pin" id="globe-pin"><i></i>' + esc(t("Georgia")) + "</div></div>" +
       '<div class="stats">' +
-      '<a href="#/actors"><b>' + D.actors.length + "</b><span>threat actors</span></a>" +
-      '<a href="#/timeline"><b>' + timeline.length + "</b><span>dated events</span></a>" +
-      '<a href="#/sources"><b>' + D.reports.length + "</b><span>sources</span></a>" +
-      '<a href="#/timeline"><b>' + firstYear + "–" + lastYear + "</b><span>years covered</span></a></div>" +
+      '<a href="#/actors"><b>' + D.actors.length + "</b><span>" + esc(t("threat actors")) + "</span></a>" +
+      '<a href="#/timeline"><b>' + timeline.length + "</b><span>" + esc(t("dated events")) + "</span></a>" +
+      '<a href="#/sources"><b>' + D.reports.length + "</b><span>" + esc(t("sources")) + "</span></a>" +
+      '<a href="#/timeline"><b>' + firstYear + "–" + lastYear + "</b><span>" + esc(t("years covered")) + "</span></a></div>" +
       "</div></section>" +
 
-      '<section class="band"><div class="wrap section-head"><div><h2>Threat actors</h2>' +
-      '<p class="sub">Who they are, according to MITRE ATT&amp;CK. Open a profile for what each did in Georgia.</p></div>' +
-      '<div class="rail-controls"><button type="button" data-rail="-1" aria-label="Previous actors">←</button><button type="button" data-rail="1" aria-label="More actors">→</button></div></div>' +
-      '<div class="rail" tabindex="0" aria-label="Threat actors, scroll horizontally">' +
+      '<section class="band"><div class="wrap section-head"><div><h2>' + esc(t("Threat actors")) + "</h2>" +
+      '<p class="sub">' + esc(t("Who they are, according to MITRE ATT&CK. Open a profile for what each did in Georgia.")) + "</p></div>" +
+      '<div class="rail-controls"><button type="button" data-rail="-1" aria-label="Previous">←</button><button type="button" data-rail="1" aria-label="Next">→</button></div></div>' +
+      '<div class="rail" tabindex="0" aria-label="' + esc(t("Threat actors")) + '">' +
       D.actors.map(function (a) { return actorCard(a, "rail-card"); }).join("") + "</div>" +
       '<div class="wrap"><div class="rail-bar"><i></i></div></div></section>' +
 
-      '<section class="band"><div class="wrap"><h2>Where to go next</h2><div class="next">' +
-      '<a href="#/timeline"><h3>Timeline</h3><p>Every dated event from ' + firstYear + " to " + lastYear + ', oldest first, filterable by actor.</p><span class="label">Open timeline →</span></a>' +
-      '<a href="#/sources"><h3>Sources</h3><p>Search all ' + D.reports.length + ' reports, advisories and articles, and the passages that mention Georgia.</p><span class="label">Search sources →</span></a>' +
-      '<a href="#/about"><h3>About and contributing</h3><p>How the collection is put together, and how to send in a report that is missing.</p><span class="label">Read more →</span></a>' +
+      '<section class="band"><div class="wrap"><h2>' + esc(t("Where to go next")) + '</h2><div class="next">' +
+      '<a href="#/timeline"><h3>' + esc(t("Timeline")) + "</h3><p>" + esc(t("Every dated event from {a} to {b}, oldest first, filterable by actor.", { a: firstYear, b: lastYear })) + '</p><span class="label">' + esc(t("Open timeline →")) + "</span></a>" +
+      '<a href="#/sources"><h3>' + esc(t("Sources")) + "</h3><p>" + esc(t("Search all {n} reports, advisories and articles, and the passages that mention Georgia.", { n: D.reports.length })) + '</p><span class="label">' + esc(t("Search sources →")) + "</span></a>" +
+      '<a href="#/about"><h3>' + esc(t("About and contributing")) + "</h3><p>" + esc(t("How the collection is put together, and how to send in a report that is missing.")) + '</p><span class="label">' + esc(t("Read more →")) + "</span></a>" +
       "</div></div></section>";
   }
 
   function pageHead(title, lede) {
-    return '<div class="page-head"><h1>' + title + "</h1>" + (lede ? '<p class="lede">' + lede + "</p>" : "") + "</div>";
+    return '<div class="page-head"><h1>' + esc(title) + "</h1>" + (lede ? '<p class="lede">' + lede + "</p>" : "") + "</div>";
   }
 
   function viewActors() {
     app.innerHTML = '<div class="wrap page">' +
-      pageHead("Threat actors", "Groups that public reporting ties to activity against Georgian targets. Descriptions are summarised from MITRE ATT&amp;CK where the group has an entry.") +
+      pageHead(t("Threat actors"), esc(t("Groups that public reporting ties to activity against Georgian targets. Descriptions are summarised from MITRE ATT&CK where the group has an entry."))) +
       '<div class="cards">' + D.actors.map(function (a) { return actorCard(a); }).join("") + "</div>" +
-      '<section class="section"><h2>Who targeted what</h2><p class="sub">Sectors each actor is reported to have targeted in Georgia.</p>' + matrixHtml() + "</section></div>";
+      '<section class="section"><h2>' + esc(t("Who targeted what")) + '</h2><p class="sub">' + esc(t("Sectors each actor is reported to have targeted in Georgia.")) + "</p>" + matrixHtml() + "</section></div>";
   }
 
   function viewActor(id) {
@@ -185,31 +211,33 @@
     var reports = reportsFor(id);
     var specific = reports.filter(function (r) { return !r.general; });
     var general = reports.filter(function (r) { return r.general; });
+    var mitreDesc = loc("actors", id, "mitreDesc", a.mitreDesc);
+    var note = loc("actors", id, "note", a.note);
     var facts =
-      "<dt>Origin</dt><dd>" + esc(a.origin) + "</dd>" +
-      (a.sponsor ? "<dt>Attributed to</dt><dd>" + esc(a.sponsor) + "</dd>" : "") +
-      (a.aliases.length ? '<dt>Also known as</dt><dd><div class="pills">' + a.aliases.map(function (x) { return '<span class="pill quiet">' + esc(x) + "</span>"; }).join("") + "</div></dd>" : "") +
-      (a.related ? '<dt>Tracked together with</dt><dd><div class="pills">' + actorPills(a.related) + "</div></dd>" : "") +
-      (a.note ? "<dt>Attribution note</dt><dd>" + esc(a.note) + "</dd>" : "");
-    var mitre = a.mitreDesc
-      ? '<div class="callout"><p class="label">About this group · ' + mitreLink(a) + "</p><p>" + esc(a.mitreDesc) + "</p></div>"
-      : '<div class="callout"><p class="label">About this group</p><p>This group has no MITRE ATT&amp;CK entry. What is known comes from the reports below.</p></div>';
+      "<dt>" + esc(t("Origin")) + "</dt><dd>" + esc(t(a.origin)) + "</dd>" +
+      (a.sponsor ? "<dt>" + esc(t("Attributed to")) + "</dt><dd>" + esc(t(a.sponsor)) + "</dd>" : "") +
+      (a.aliases.length ? "<dt>" + esc(t("Also known as")) + '</dt><dd><div class="pills">' + a.aliases.map(function (x) { return '<span class="pill quiet">' + esc(x) + "</span>"; }).join("") + "</div></dd>" : "") +
+      (a.related ? "<dt>" + esc(t("Tracked together with")) + '</dt><dd><div class="pills">' + actorPills(a.related) + "</div></dd>" : "") +
+      (note ? "<dt>" + esc(t("Attribution note")) + "</dt><dd>" + esc(note) + "</dd>" : "");
+    var mitre = mitreDesc
+      ? '<div class="callout"><p class="label">' + esc(t("About this group")) + " · " + mitreLink(a) + "</p><p>" + esc(mitreDesc) + "</p></div>"
+      : '<div class="callout"><p class="label">' + esc(t("About this group")) + "</p><p>" + esc(t("This group has no MITRE ATT&CK entry. What is known comes from the reports below.")) + "</p></div>";
     app.innerHTML = '<div class="wrap page">' +
-      '<p class="crumb"><a href="#/actors">← All threat actors</a></p>' +
+      '<p class="crumb"><a href="#/actors">' + esc(t("← All threat actors")) + "</a></p>" +
       '<div class="page-head"><div class="profile">' + portrait(a, true) + "<div><h1>" + esc(a.name) + '</h1><div class="pills">' +
-      '<span class="pill">' + esc(a.origin) + "</span>" + (a.sponsor ? '<span class="pill quiet">' + esc(a.sponsor) + "</span>" : "") +
+      '<span class="pill">' + esc(t(a.origin)) + "</span>" + (a.sponsor ? '<span class="pill quiet">' + esc(t(a.sponsor)) + "</span>" : "") +
       "</div></div></div>" + mitre +
-      '<div class="callout red"><p class="label">In Georgia</p><p>' + esc(a.summary) + "</p></div>" +
+      '<div class="callout red"><p class="label">' + esc(t("In Georgia")) + "</p><p>" + esc(loc("actors", id, "summary", a.summary)) + "</p></div>" +
       '<dl class="facts">' + facts + "</dl></div>" +
-      '<section class="section" style="margin-top:0"><h2>Activity against Georgia</h2>' + timelineHtml(eventsFor(id)) + "</section>" +
-      '<section class="section"><h2>Reports mentioning Georgia</h2>' +
+      '<section class="section" style="margin-top:0"><h2>' + esc(t("Activity against Georgia")) + "</h2>" + timelineHtml(eventsFor(id)) + "</section>" +
+      '<section class="section"><h2>' + esc(t("Reports mentioning Georgia")) + "</h2>" +
       specific.map(function (r) { return reportHtml(r, "", true); }).join("") + "</section>" +
-      (general.length ? '<section class="section"><h2>Background reading</h2>' +
+      (general.length ? '<section class="section"><h2>' + esc(t("Background reading")) + "</h2>" +
         general.map(function (r) { return reportHtml(r, "", false); }).join("") + "</section>" : "") + "</div>";
   }
 
   function chips(selected) {
-    return '<button class="chip" data-actor="" aria-pressed="' + (!selected) + '">All</button>' +
+    return '<button class="chip" data-actor="" aria-pressed="' + (!selected) + '">' + esc(t("All")) + "</button>" +
       D.actors.map(function (a) {
         return '<button class="chip" data-actor="' + a.id + '" aria-pressed="' + (selected === a.id) + '">' + esc(a.name) + "</button>";
       }).join("");
@@ -218,7 +246,7 @@
   function viewTimeline() {
     var selected = "";
     app.innerHTML = '<div class="wrap page">' +
-      pageHead("Timeline", "Dated events taken from the source reports, oldest first.") +
+      pageHead(t("Timeline"), esc(t("Dated events taken from the source reports, oldest first."))) +
       '<div class="filters" id="tl-filters"></div><div id="tl-list"></div></div>';
     var filters = document.getElementById("tl-filters");
     function draw() {
@@ -227,8 +255,8 @@
         return !selected || e.actors.indexOf(selected) !== -1;
       }));
     }
-    filters.addEventListener("click", function (ev) {
-      var b = ev.target.closest(".chip");
+    filters.addEventListener("click", function (e) {
+      var b = e.target.closest(".chip");
       if (!b) return;
       selected = b.dataset.actor;
       draw();
@@ -239,9 +267,9 @@
   function viewSources(focusId) {
     var state = { q: "", actor: "", findingsOnly: false };
     app.innerHTML = '<div class="wrap page">' +
-      pageHead("Sources", "Every report, article and advisory in the collection. Search covers titles, publishers and the extracted findings.") +
-      '<div class="filters"><input class="search" id="src-q" type="search" placeholder="Search, e.g. Ministry of Defense, PinchDuke, 2019" aria-label="Search sources">' +
-      '<label class="check label"><input type="checkbox" id="src-f"> With Georgia findings only</label></div>' +
+      pageHead(t("Sources"), esc(t("Every report, article and advisory in the collection. Search covers titles, publishers and the extracted findings."))) +
+      '<div class="filters"><input class="search" id="src-q" type="search" placeholder="' + esc(t("Search, e.g. Ministry of Defense, PinchDuke, 2019")) + '" aria-label="' + esc(t("Search sources")) + '">' +
+      '<label class="check label"><input type="checkbox" id="src-f"> ' + esc(t("With Georgia findings only")) + "</label></div>" +
       '<div class="filters" id="src-filters"></div><p class="count label" id="src-count" aria-live="polite"></p><div id="src-list"></div></div>';
     var filters = document.getElementById("src-filters");
     function draw() {
@@ -250,21 +278,23 @@
         if (state.actor && r.actors.indexOf(state.actor) === -1) return false;
         if (state.findingsOnly && !r.findings.length) return false;
         if (!q) return true;
-        var hay = [r.title, r.publisher, r.year || ""].concat(r.findings, r.actors.map(function (id) {
+        var hay = [r.title, r.publisher, r.year || ""].concat(r.findings, findingsOf(r), r.actors.map(function (id) {
           return actorById[id].name + " " + actorById[id].aliases.join(" ");
         })).join(" ").toLowerCase();
         return hay.indexOf(q) !== -1;
       });
       filters.innerHTML = chips(state.actor);
-      document.getElementById("src-count").textContent = plural(hits.length, "source") + " of " + D.reports.length;
+      document.getElementById("src-count").textContent = lang === "ka"
+        ? count(hits.length, "source") + " / " + D.reports.length
+        : count(hits.length, "source") + " of " + D.reports.length;
       document.getElementById("src-list").innerHTML = hits.length
         ? hits.map(function (r) { return reportHtml(r, state.q.trim(), !!q || r.id === focusId); }).join("")
-        : '<p class="empty">Nothing matches. Try a shorter search or clear the filters.</p>';
+        : '<p class="empty">' + esc(t("Nothing matches. Try a shorter search or clear the filters.")) + "</p>";
     }
-    document.getElementById("src-q").addEventListener("input", function (ev) { state.q = ev.target.value; draw(); });
-    document.getElementById("src-f").addEventListener("change", function (ev) { state.findingsOnly = ev.target.checked; draw(); });
-    filters.addEventListener("click", function (ev) {
-      var b = ev.target.closest(".chip");
+    document.getElementById("src-q").addEventListener("input", function (e) { state.q = e.target.value; draw(); });
+    document.getElementById("src-f").addEventListener("change", function (e) { state.findingsOnly = e.target.checked; draw(); });
+    filters.addEventListener("click", function (e) {
+      var b = e.target.closest(".chip");
       if (!b) return;
       state.actor = b.dataset.actor;
       draw();
@@ -277,20 +307,20 @@
   }
 
   function viewAbout() {
-    app.innerHTML = '<div class="wrap page">' + pageHead("About") + '<div class="prose">' +
-      "<p>Georgian Threat Matrix aggregates data from public sources on cyber threats targeting Georgia. It covers reports on APT groups, mentions of Georgia in cyber-related findings, and malware used against Georgian targets.</p>" +
-      "<p>Everything here is collected through OSINT techniques and manual research. All reports are sourced from public research, and credit for the original findings goes to the respective authors. Findings are reproduced from the linked source so they can be checked against it; entries tagged <i>summary</i> are paraphrased rather than quoted.</p>" +
-      "<h2>How it is organised</h2><ul>" +
-      "<li><b>Threat actors</b>: one page per group, with a description summarised from MITRE ATT&amp;CK, aliases, attribution and every report that ties it to Georgia.</li>" +
-      "<li><b>Timeline</b>: dated events drawn from those reports.</li>" +
-      "<li><b>Sources</b>: the full searchable list of documents. Items marked <i>archived</i> also have a copy kept in the repository.</li></ul>" +
-      "<h2>Contribute</h2>" +
-      "<p>Know of a report that mentions Georgia and is missing here? Email <b>" + esc(D.contact.email) + "</b> or message " +
-      '<a href="https://x.com/' + esc(D.contact.x) + '" target="_blank" rel="noopener noreferrer">@' + esc(D.contact.x) + "</a> on X.</p></div></div>";
+    app.innerHTML = '<div class="wrap page">' + pageHead(t("About")) + '<div class="prose">' +
+      "<p>" + esc(t("Georgian Threat Matrix aggregates data from public sources on cyber threats targeting Georgia. It covers reports on APT groups, mentions of Georgia in cyber-related findings, and malware used against Georgian targets.")) + "</p>" +
+      "<p>" + esc(t("Everything here is collected through OSINT techniques and manual research. All reports are sourced from public research, and credit for the original findings goes to the respective authors. Findings are reproduced from the linked source so they can be checked against it; entries tagged summary are paraphrased rather than quoted.")) + "</p>" +
+      "<h2>" + esc(t("How it is organised")) + "</h2><ul>" +
+      "<li><b>" + esc(t("Threat actors")) + "</b>: " + esc(t("one page per group, with a description summarised from MITRE ATT&CK, aliases, attribution and every report that ties it to Georgia.")) + "</li>" +
+      "<li><b>" + esc(t("Timeline")) + "</b>: " + esc(t("dated events drawn from those reports.")) + "</li>" +
+      "<li><b>" + esc(t("Sources")) + "</b>: " + esc(t("the full searchable list of documents. Items marked archived also have a copy kept in the repository.")) + "</li></ul>" +
+      "<h2>" + esc(t("Contribute")) + "</h2>" +
+      "<p>" + esc(t("Know of a report that mentions Georgia and is missing here? Email")) + " <b>" + esc(D.contact.email) + "</b> " + esc(t("or message")) +
+      ' <a href="https://x.com/' + esc(D.contact.x) + '" target="_blank" rel="noopener noreferrer">@' + esc(D.contact.x) + "</a> " + esc(t("on X.")) + "</p></div></div>";
   }
 
   function viewMissing() {
-    app.innerHTML = '<div class="wrap page">' + pageHead("Page not found", '<a href="#/">Back to the home page</a>') + "</div>";
+    app.innerHTML = '<div class="wrap page">' + pageHead(t("Page not found"), '<a href="#/">' + esc(t("Back to the home page")) + "</a>") + "</div>";
   }
 
   /* ---------- globe ---------- */
@@ -304,7 +334,7 @@
     var ctx = canvas.getContext("2d");
     var RAD = Math.PI / 180;
     var TILT = 24;             // degrees the north is tipped towards the viewer, so Georgia sits above centre
-    var HOME = G.tbilisi[0];   // longitude the globe rests on
+    var HOME = G.tbilisi[0];   // longitude the globe starts near
     var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     var css = getComputedStyle(document.documentElement);
     var colDot = css.getPropertyValue("--globe-dot").trim();
@@ -319,7 +349,8 @@
       cosLat[i] = Math.cos(G.dots[2 * i + 1] / 10 * RAD);
     }
 
-    var size = 0, dpr = 1, R = 0, offset = 0, tiltOffset = 0, tilt = TILT * RAD, dragging = false, lastX = 0, lastY = 0, visible = true, start = performance.now(), last = start, spin = 25;
+    var size = 0, dpr = 1, R = 0, offset = 0, tiltOffset = 0, tilt = TILT * RAD, dragging = false, lastX = 0, lastY = 0,
+      visible = true, start = performance.now(), last = start, spin = 25;
 
     function resize() {
       size = canvas.clientWidth;
@@ -343,11 +374,11 @@
       if (run !== globeRun || !canvas.isConnected) return;
       requestAnimationFrame(draw);
       if (!visible && !dragging) return;
-      var t = (now - start) / 1000;
+      var time = (now - start) / 1000;
       var dt = Math.min(0.1, (now - last) / 1000); last = now;
       if (!reduced && !dragging) spin -= dt * 9;   // degrees per second: one full turn every 40 s
       var centre = (HOME + spin + offset) * RAD;
-      var nod = reduced ? 0 : 10 * Math.sin(t / 4.3);
+      var nod = reduced ? 0 : 10 * Math.sin(time / 4.3);
       tilt = (TILT + nod + tiltOffset) * RAD;
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -385,7 +416,7 @@
       var shown = c[2] > 0.1;
       pin.hidden = !shown;
       if (shown) {
-        var pulse = reduced ? 0.5 : (t % 2.2) / 2.2;
+        var pulse = reduced ? 0.5 : (time % 2.2) / 2.2;
         ctx.strokeStyle = colRed; ctx.lineWidth = 1.5;
         ctx.globalAlpha = 1 - pulse;
         ctx.beginPath(); ctx.arc(c[0], c[1], 5 + pulse * 20, 0, 2 * Math.PI); ctx.stroke();
@@ -468,6 +499,18 @@
 
   /* ---------- router ---------- */
 
+  // Translates the fixed parts of the page (navigation, footer) and the switch itself.
+  function applyLang() {
+    document.documentElement.lang = lang;
+    document.querySelectorAll("[data-t]").forEach(function (el) {
+      if (!el.dataset.en) el.dataset.en = el.textContent.trim();
+      el.textContent = t(el.dataset.en);
+    });
+    var b = document.getElementById("lang-toggle");
+    b.textContent = lang === "ka" ? "EN" : "ქარ";
+    b.setAttribute("aria-label", lang === "ka" ? "Switch to English" : "ქართულ ენაზე გადართვა");
+  }
+
   function route() {
     var parts = location.hash.replace(/^#\/?/, "").split("/");
     var page = parts[0] || "home";
@@ -487,11 +530,22 @@
     });
     var h1 = app.querySelector("h1");
     document.title = (page === "home" || !h1 ? "" : h1.textContent + " · ") + "Georgian Threat Matrix";
-    if (!(page === "sources" && parts[1])) window.scrollTo(0, 0);
     setupGlobe();
     setupRail();
   }
 
-  window.addEventListener("hashchange", route);
+  document.getElementById("lang-toggle").addEventListener("click", function () {
+    lang = lang === "ka" ? "en" : "ka";
+    try { localStorage.setItem("gtm-lang", lang); } catch (e) { /* storage unavailable */ }
+    var y = window.scrollY;
+    applyLang();
+    route();
+    window.scrollTo(0, y);
+  });
+  window.addEventListener("hashchange", function () {
+    route();
+    if (!/^#\/sources\/./.test(location.hash)) window.scrollTo(0, 0);
+  });
+  applyLang();
   route();
 })();

@@ -8,7 +8,7 @@
 
 A public, source-linked record of state-backed cyber threats against Georgia.
 
-**Live site: https://in7314u.github.io/georgia-threat-matrix/**
+**Live site: https://in7314u.github.io/georgia-threat-matrix/** (English and Georgian; switch with the button in the top bar)
 
 Reporting on attacks against Georgia is scattered across vendor write-ups, indictments, government statements and news articles, and most of it mentions Georgia only in passing. This project pulls those mentions into one place, so that for each threat actor you can see who they are, what they did in Georgia and when, and read the source for yourself.
 
@@ -36,6 +36,8 @@ Everything the site shows lives in one file, [`data/data.js`](data/data.js). The
 - `actors`: one entry per threat actor.
 - `reports`: a source document, its links, and the findings about Georgia taken from it.
 - `timeline`: dated events, each pointing back at a report.
+
+Georgian translations of the interface, actor descriptions, timeline and summaries live in [`data/i18n.js`](data/i18n.js). Verbatim quotations from English-language reports are shown in English in both versions.
 
 To add a source, append an entry to `reports` (and to `timeline` if it has a date) and commit. GitHub Pages republishes the site within a minute.
 

@@ -282,7 +282,7 @@
       cosLat[i] = Math.cos(G.dots[2 * i + 1] / 10 * RAD);
     }
 
-    var size = 0, dpr = 1, R = 0, offset = 0, tiltOffset = 0, tilt = TILT * RAD, dragging = false, lastX = 0, lastY = 0, visible = true, start = performance.now();
+    var size = 0, dpr = 1, R = 0, offset = 0, tiltOffset = 0, tilt = TILT * RAD, dragging = false, lastX = 0, lastY = 0, visible = true, start = performance.now(), last = start, spin = 25;
 
     function resize() {
       size = canvas.clientWidth;
@@ -307,10 +307,11 @@
       requestAnimationFrame(draw);
       if (!visible && !dragging) return;
       var t = (now - start) / 1000;
-      var sway = reduced || dragging ? 0 : 26 * Math.sin(t / 7);
-      var centre = (HOME + sway + offset) * RAD;
-      var nod = reduced || dragging ? 0 : 10 * Math.sin(t / 4.3);
-      tilt = (TILT + nod + tiltOffset) * RAD;
+      var dt = Math.min(0.1, (now - last) / 1000); last = now;
+      if (!reduced && !dragging) spin -= dt * 9;   // degrees per second: one full turn every 40 s
+      var centre = (HOME + spin + offset) * RAD;
+      var nod = reduced ? 0 : 10 * Math.sin(t / 4.3);
+      tilt = Math.max(-85, Math.min(85, TILT + nod + tiltOffset)) * RAD;
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, size, size);
@@ -364,10 +365,9 @@
     canvas.addEventListener("pointermove", function (e) {
       if (!dragging) return;
       offset -= (e.clientX - lastX) * 0.35; lastX = e.clientX;
-      // Keep Georgia on the visible half: limit how far the globe can be tipped.
-      tiltOffset = Math.max(-40, Math.min(40, tiltOffset + (e.clientY - lastY) * 0.3)); lastY = e.clientY;
+      tiltOffset = Math.max(-100, Math.min(60, tiltOffset + (e.clientY - lastY) * 0.3)); lastY = e.clientY;
     });
-    function release() { dragging = false; start = performance.now(); }
+    function release() { dragging = false; }
     canvas.addEventListener("pointerup", release);
     canvas.addEventListener("pointercancel", release);
     window.addEventListener("resize", resize);

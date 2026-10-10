@@ -18,7 +18,7 @@ window.GTM_KA = {
     "All reports are sourced from public research. Credit for the original findings goes to the respective authors.": "ყველა ანგარიში საჯარო კვლევებს ეფუძნება. ორიგინალი მიგნებების ავტორობა შესაბამის ავტორებს ეკუთვნის.",
     "Group descriptions are summarised from": "ჯგუფების აღწერები შეჯამებულია წყაროდან:",
 
-    "Cyber threats against Georgia, in one place": "კიბერსაფრთხეები საქართველოს წინააღმდეგ - ერთ სივრცეში",
+    "Cyber threats against Georgia, in one place": "კიბერსაფრთხეები საქართველოში - ისტორიული შეტევები ერთ სივრცეში",
     "Georgian Threat Matrix collects public reports on the state-backed hacking groups that have targeted Georgia. For each group you can see who they are, what they did here and when, with a link to every source.": "Georgian Threat Matrix აერთიანებს საჯარო ანგარიშებს სახელმწიფოს მიერ მხარდაჭერილი ჰაკერული ჯგუფების შესახებ, რომლებმაც საქართველო სამიზნედ აქციეს. თითოეული ჯგუფისთვის ნახავთ, ვინ არიან, რა გააკეთეს საქართველოში და როდის - ყველა წყაროს ბმულით.",
     "Georgia": "საქართველო",
     "threat actors": "საფრთხის აქტორი",

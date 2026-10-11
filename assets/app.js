@@ -15,8 +15,11 @@
 
   /* ---------- language ---------- */
 
+  // The Georgian version is switched off while its text is being proofread.
+  // Set this to true to bring back the language button; the translations stay in data/i18n.js.
+  var GEORGIAN_ENABLED = false;
   var lang = "en";
-  try { if (localStorage.getItem("gtm-lang") === "ka") lang = "ka"; } catch (e) { /* storage unavailable */ }
+  try { if (GEORGIAN_ENABLED && localStorage.getItem("gtm-lang") === "ka") lang = "ka"; } catch (e) { /* storage unavailable */ }
 
   // Interface text: the English string is the key.
   function t(s, vars) {
@@ -507,6 +510,7 @@
       el.textContent = t(el.dataset.en);
     });
     var b = document.getElementById("lang-toggle");
+    b.hidden = !GEORGIAN_ENABLED;
     b.textContent = lang === "ka" ? "EN" : "ქარ";
     b.setAttribute("aria-label", lang === "ka" ? "Switch to English" : "ქართულ ენაზე გადართვა");
   }

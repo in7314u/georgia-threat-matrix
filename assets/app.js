@@ -191,6 +191,7 @@
       '<div class="wrap"><div class="rail-bar"><i></i></div></div></section>' +
 
       '<section class="band"><div class="wrap"><h2>' + esc(t("Where to go next")) + '</h2><div class="next">' +
+      '<a href="#/matrix"><h3>' + esc(t("ATT&CK matrix")) + "</h3><p>" + esc(t("The techniques used against Georgian targets, by MITRE ATT&CK tactic, each with its evidence.")) + '</p><span class="label">' + esc(t("Open matrix →")) + "</span></a>" +
       '<a href="#/timeline"><h3>' + esc(t("Timeline")) + "</h3><p>" + esc(t("Every dated event from {a} to {b}, oldest first, filterable by actor.", { a: firstYear, b: lastYear })) + '</p><span class="label">' + esc(t("Open timeline →")) + "</span></a>" +
       '<a href="#/sources"><h3>' + esc(t("Sources")) + "</h3><p>" + esc(t("Search all {n} reports, advisories and articles, and the passages that mention Georgia.", { n: D.reports.length })) + '</p><span class="label">' + esc(t("Search sources →")) + "</span></a>" +
       '<a href="#/about"><h3>' + esc(t("About and contributing")) + "</h3><p>" + esc(t("How the collection is put together, and how to send in a report that is missing.")) + '</p><span class="label">' + esc(t("Read more →")) + "</span></a>" +
@@ -233,6 +234,10 @@
       '<div class="callout red"><p class="label">' + esc(t("In Georgia")) + "</p><p>" + esc(loc("actors", id, "summary", a.summary)) + "</p></div>" +
       '<dl class="facts">' + facts + "</dl></div>" +
       '<section class="section" style="margin-top:0"><h2>' + esc(t("Activity against Georgia")) + "</h2>" + timelineHtml(eventsFor(id)) + "</section>" +
+      (D.techniqueUse.some(function (u) { return u.actor === id; })
+        ? '<section class="section"><h2>' + esc(t("Techniques used against Georgia")) + '</h2><ul class="uses">' +
+          D.techniqueUse.filter(function (u) { return u.actor === id; }).map(function (u) { return useHtml(u, true); }).join("") + "</ul></section>"
+        : "") +
       '<section class="section"><h2>' + esc(t("Reports mentioning Georgia")) + "</h2>" +
       specific.map(function (r) { return reportHtml(r, "", true); }).join("") + "</section>" +
       (general.length ? '<section class="section"><h2>' + esc(t("Background reading")) + "</h2>" +
@@ -324,6 +329,81 @@
 
   function viewMissing() {
     app.innerHTML = '<div class="wrap page">' + pageHead(t("Page not found"), '<a href="#/">' + esc(t("Back to the home page")) + "</a>") + "</div>";
+  }
+
+  /* ---------- ATT&CK matrix ---------- */
+
+  function usesOf(technique) { return D.techniqueUse.filter(function (u) { return u.technique === technique; }); }
+  function techUrl(id) { return "https://attack.mitre.org/techniques/" + id.replace(".", "/") + "/"; }
+  function tacticName(id) { return D.tactics.filter(function (x) { return x.id === id; })[0].name; }
+  function actorLabel(id) { return id ? actorById[id].name : t("Unattributed"); }
+
+  function useHtml(u, showTechnique) {
+    var r = reportById[u.report];
+    var tech = D.techniques[u.technique];
+    return '<li><div class="use-head">' +
+      (showTechnique
+        ? '<a class="tech-id" href="#/matrix/' + u.technique + '">' + u.technique + "</a><b>" + esc(tech.name) + '</b><span class="label">' + esc(tacticName(tech.tactic)) + "</span>"
+        : (u.actor ? actorPills([u.actor]) : '<span class="pill quiet">' + esc(t("Unattributed")) + "</span>")) +
+      "</div><p>" + esc(u.basis) + '</p><a class="src" href="#/sources/' + r.id + '">' + esc(t("Source:")) + " " + esc(r.publisher) + "</a></li>";
+  }
+
+  function viewMatrix(focus) {
+    var state = { actor: null, technique: D.techniques[focus] ? focus : "" };
+    var rows = D.actors.filter(function (a) { return D.techniqueUse.some(function (u) { return u.actor === a.id; }); });
+    app.innerHTML = '<div class="wrap page">' +
+      pageHead(t("ATT&CK matrix"), esc(t("Techniques that sources describe being used against Georgian targets, arranged by MITRE ATT&CK tactic. Pick a technique to see the evidence, and follow the MITRE link for its mitigations and detections."))) +
+      '<div class="filters" id="mx-filters"></div></div>' +
+      '<div class="attack-scroll"><div class="attack" id="mx-grid"></div></div>' +
+      '<div class="wrap"><p class="label mx-hint">' + esc(t("A technique appears only where a source in this collection describes it. An empty column does not mean the tactic was not used.")) + "</p>" +
+      '<div id="mx-detail"></div></div>';
+    var filters = document.getElementById("mx-filters");
+    var grid = document.getElementById("mx-grid");
+    var detail = document.getElementById("mx-detail");
+
+    function draw() {
+      filters.innerHTML = '<button class="chip" data-actor="*" aria-pressed="' + (state.actor === null) + '">' + esc(t("All")) + "</button>" +
+        rows.map(function (a) {
+          return '<button class="chip" data-actor="' + a.id + '" aria-pressed="' + (state.actor === a.id) + '">' + esc(a.name) + "</button>";
+        }).join("") +
+        '<button class="chip" data-actor="" aria-pressed="' + (state.actor === "") + '">' + esc(t("Unattributed")) + "</button>";
+
+      grid.innerHTML = D.tactics.map(function (tac) {
+        var ids = Object.keys(D.techniques).filter(function (id) { return D.techniques[id].tactic === tac.id; });
+        return '<section class="tactic"><h3>' + esc(tac.name) + "</h3>" + ids.map(function (id) {
+          var uses = usesOf(id);
+          var who = uses.map(function (u) { return u.actor; }).filter(function (x, i, arr) { return arr.indexOf(x) === i; });
+          var on = state.actor === null || who.indexOf(state.actor) !== -1;
+          return '<button type="button" class="tech' + (on ? "" : " off") + '" data-tech="' + id + '" aria-pressed="' + (state.technique === id) + '">' +
+            '<span class="tech-id">' + id + "</span><span>" + esc(D.techniques[id].name) + "</span>" +
+            '<span class="label">' + esc(who.map(actorLabel).join(", ")) + "</span></button>";
+        }).join("") + "</section>";
+      }).join("");
+
+      if (!state.technique) {
+        detail.innerHTML = '<p class="empty">' + esc(t("Select a technique above to see who used it against Georgia and what the source says.")) + "</p>";
+        return;
+      }
+      var tech = D.techniques[state.technique];
+      detail.innerHTML = '<section class="tech-detail"><p class="label">' + esc(tacticName(tech.tactic)) + "</p>" +
+        "<h2>" + state.technique + " · " + esc(tech.name) + "</h2>" +
+        '<p><a href="' + techUrl(state.technique) + '" target="_blank" rel="noopener noreferrer">' + esc(t("Mitigations and detections on MITRE ATT&CK")) + " ↗</a></p>" +
+        '<ul class="uses">' + usesOf(state.technique).map(function (u) { return useHtml(u, false); }).join("") + "</ul></section>";
+    }
+    filters.addEventListener("click", function (e) {
+      var b = e.target.closest(".chip");
+      if (!b) return;
+      state.actor = b.dataset.actor === "*" ? null : b.dataset.actor;
+      draw();
+    });
+    grid.addEventListener("click", function (e) {
+      var b = e.target.closest(".tech");
+      if (!b) return;
+      state.technique = b.dataset.tech;
+      draw();
+      detail.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    });
+    draw();
   }
 
   /* ---------- globe ---------- */
@@ -523,6 +603,7 @@
     if (page === "home") viewHome();
     else if (page === "actors") viewActors();
     else if (page === "actor") viewActor(parts[1]);
+    else if (page === "matrix") viewMatrix(parts[1]);
     else if (page === "timeline") viewTimeline();
     else if (page === "sources") viewSources(parts[1]);
     else if (page === "about") viewAbout();

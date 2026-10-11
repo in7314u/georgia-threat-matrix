@@ -18,6 +18,7 @@ Reporting on attacks against Georgia is scattered across vendor write-ups, indic
 |---|---|
 | **Home** | A short introduction, a globe with Georgia marked, and a card for every threat actor. |
 | **Threat actors** | One profile per group: a description summarised from MITRE ATT&CK, aliases, attribution, a timeline of activity against Georgia, and every report that mentions it. Also a matrix of which actor targeted which sector. |
+| **Matrix** | The MITRE ATT&CK techniques that sources describe being used against Georgian targets, by tactic, each with its evidence and a link to MITRE's mitigations. |
 | **Timeline** | Every dated event from 2008 onwards, oldest first, filterable by actor. |
 | **Sources** | All reports, advisories and articles, searchable by title, publisher and the passages that mention Georgia. |
 
@@ -36,6 +37,7 @@ Everything the site shows lives in one file, [`data/data.js`](data/data.js). The
 - `actors`: one entry per threat actor.
 - `reports`: a source document, its links, and the findings about Georgia taken from it.
 - `timeline`: dated events, each pointing back at a report.
+- `techniqueUse`: one line per ATT&CK technique an actor used against Georgia, with the evidence and its source.
 
 A Georgian translation is in progress in [`data/i18n.js`](data/i18n.js) and is not yet shown on the site.
 

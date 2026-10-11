@@ -115,7 +115,6 @@
     return '<article class="report" id="r-' + r.id + '">' +
       '<h3><a href="' + esc(r.links[0].url) + '" target="_blank" rel="noopener noreferrer">' + highlight(r.title, q) + "</a></h3>" +
       '<div class="report-meta"><span class="label">' + highlight(r.publisher, q) + (r.year ? " · " + r.year : "") + "</span>" + actorPills(r.actors) +
-      (r.general ? '<span class="pill quiet">' + esc(t("background")) + "</span>" : "") +
       (r.paraphrased ? '<span class="pill quiet" title="' + esc(t("Findings are summaries written for this site, not quotations")) + '">' + esc(t("summary")) + "</span>" : "") + "</div>" +
       '<ul class="links">' + links + "</ul>" + findings + "</article>";
   }
@@ -213,8 +212,6 @@
     var a = actorById[id];
     if (!a) return viewMissing();
     var reports = reportsFor(id);
-    var specific = reports.filter(function (r) { return !r.general; });
-    var general = reports.filter(function (r) { return r.general; });
     var mitreDesc = loc("actors", id, "mitreDesc", a.mitreDesc);
     var note = loc("actors", id, "note", a.note);
     var facts =
@@ -239,9 +236,7 @@
           D.techniqueUse.filter(function (u) { return u.actor === id; }).map(function (u) { return useHtml(u, true); }).join("") + "</ul></section>"
         : "") +
       '<section class="section"><h2>' + esc(t("Reports mentioning Georgia")) + "</h2>" +
-      specific.map(function (r) { return reportHtml(r, "", true); }).join("") + "</section>" +
-      (general.length ? '<section class="section"><h2>' + esc(t("Background reading")) + "</h2>" +
-        general.map(function (r) { return reportHtml(r, "", false); }).join("") + "</section>" : "") + "</div>";
+      reports.map(function (r) { return reportHtml(r, "", true); }).join("") + "</section></div>";
   }
 
   function chips(selected) {
@@ -273,18 +268,17 @@
   }
 
   function viewSources(focusId) {
-    var state = { q: "", actor: "", findingsOnly: false };
+    var state = { q: "", actor: "" };
     app.innerHTML = '<div class="wrap page">' +
-      pageHead(t("Sources"), esc(t("Every report, article and advisory in the collection. Search covers titles, publishers and the extracted findings."))) +
+      pageHead(t("Sources"), esc(t("Every report, article and advisory in the collection, each one about Georgia. Search covers titles, publishers and the extracted findings."))) +
       '<div class="filters"><input class="search" id="src-q" type="search" placeholder="' + esc(t("Search, e.g. Ministry of Defense, PinchDuke, 2019")) + '" aria-label="' + esc(t("Search sources")) + '">' +
-      '<label class="check label"><input type="checkbox" id="src-f"> ' + esc(t("With Georgia findings only")) + "</label></div>" +
+      "</div>" +
       '<div class="filters" id="src-filters"></div><p class="count label" id="src-count" aria-live="polite"></p><div id="src-list"></div></div>';
     var filters = document.getElementById("src-filters");
     function draw() {
       var q = state.q.trim().toLowerCase();
       var hits = D.reports.filter(function (r) {
         if (state.actor && r.actors.indexOf(state.actor) === -1) return false;
-        if (state.findingsOnly && !r.findings.length) return false;
         if (!q) return true;
         var hay = [r.title, r.publisher, r.year || ""].concat(r.findings, findingsOf(r), r.actors.map(function (id) {
           return actorById[id].name + " " + actorById[id].aliases.join(" ");
@@ -300,7 +294,6 @@
         : '<p class="empty">' + esc(t("Nothing matches. Try a shorter search or clear the filters.")) + "</p>";
     }
     document.getElementById("src-q").addEventListener("input", function (e) { state.q = e.target.value; draw(); });
-    document.getElementById("src-f").addEventListener("change", function (e) { state.findingsOnly = e.target.checked; draw(); });
     filters.addEventListener("click", function (e) {
       var b = e.target.closest(".chip");
       if (!b) return;

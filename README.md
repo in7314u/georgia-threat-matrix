@@ -45,7 +45,7 @@ Findings are reproduced from the linked source so they can be checked against it
 
 ## Contributing
 
-Know of a report that mentions Georgia and is missing here? Open an issue or a pull request, email balefulshadowv9@gmail.com, or message [@balefulshadowv9](https://x.com/balefulshadowv9) on X.
+Know of a report that mentions Georgia and is missing here? Open an issue or a pull request, email balefulshadow9@proton.me, or message [@balefulshadowv9](https://x.com/balefulshadowv9) on X.
 
 ## Credits
 
